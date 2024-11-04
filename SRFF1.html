@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAND Gate SR Flip-Flop Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+        .container {
+            display: inline-block;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 30%;
+        }
+        .input-label {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+        .switch {
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            margin-left: 10px;
+            position: relative;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .truth-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        .truth-table th, .truth-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .truth-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .highlight {
+            background-color: #ffeb3b;
+        }
+        #invalidCondition {
+            color: red;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Control the Flip-Flop!</h2>
+        <div class="input-label">Input S (Set): <span id="stateS">0</span></div>
+        <label class="switch">
+            <input type="checkbox" id="inputS" onchange="updateState()">
+            <span class="slider"></span>
+        </label>
+        <div class="input-label">Input R (Reset): <span id="stateR">0</span></div>
+        <label class="switch">
+            <input type="checkbox" id="inputR" onchange="updateState()">
+            <span class="slider"></span>
+        </label>
+        <div class="input-label">Current State Q: <span id="stateQ">0</span></div>
+        <label class="switch">
+            <input type="checkbox" id="currentQ" onchange="updateCurrentState()">
+            <span class="slider"></span>
+        </label>
+        <div id="results" class="results"></div>
+        <div id="invalidCondition"><strong>Invalid condition: S and R cannot both be 1!</strong></div>
+    </div>
+
+    <div class="container">
+        <h3>Truth Table (Inputs & Outputs)</h3>
+        <table class="truth-table" id="truthTable">
+            <tr>
+                <th>Input S (Set)</th>
+                <th>Input R (Reset)</th>
+                <th>Input Q (Current State)</th>
+                <th>Output Q' (Next State)</th>
+                <th>Output Q' bar</th>
+            </tr>
+            <tr>
+                <td>0</td><td>0</td><td>0</td><td>0</td><td>1</td>
+            </tr>
+            <tr>
+                <td>0</td><td>0</td><td>1</td><td>1</td><td>0</td>
+            </tr>
+            <tr>
+                <td>0</td><td>1</td><td>X</td><td>0</td><td>1</td>
+            </tr>
+            <tr>
+                <td>1</td><td>0</td><td>X</td><td>1</td><td>0</td>
+            </tr>
+            <tr>
+                <td>1</td><td>1</td><td>X</td><td>Invalid</td><td>Invalid</td>
+            </tr>
+        </table>
+    </div>
+
+    <script>
+        let Q = 0;  // Current state
+        let QNext = 0;  // Next state
+
+        function updateCurrentState() {
+            Q = document.getElementById('currentQ').checked ? 1 : 0;
+            document.getElementById('stateQ').innerText = Q;
+            updateState();
+        }
+
+        function updateState() {
+            const inputS = document.getElementById('inputS').checked ? 1 : 0;
+            const inputR = document.getElementById('inputR').checked ? 1 : 0;
+
+            document.getElementById('stateS').innerText = inputS;
+            document.getElementById('stateR').innerText = inputR;
+
+            if (inputS === 1 && inputR === 1) {
+                document.getElementById('invalidCondition').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('invalidCondition').style.display = 'none';
+            }
+
+            if (inputS === 1 && inputR === 0) {
+                QNext = 1;
+            } else if (inputS === 0 && inputR === 1) {
+                QNext = 0;
+            } else if (inputS === 0 && inputR === 0) {
+                QNext = Q;  // Hold the current state
+            }
+
+            document.getElementById('results').innerHTML = `<strong>Next State Q':</strong> ${QNext}`;
+            highlightTruthTable(inputS, inputR, Q);
+        }
+
+        function highlightTruthTable(S, R, currentState) {
+            const rows = document.querySelectorAll('.truth-table tr');
+            rows.forEach(row => row.classList.remove('highlight'));
+
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if (cells.length) {
+                    const rowS = parseInt(cells[0].innerText);
+                    const rowR = parseInt(cells[1].innerText);
+                    const rowQ = cells[2].innerText === 'X' ? currentState : parseInt(cells[2].innerText);
+                    if (rowS === S && rowR === R && rowQ === currentState) {
+                        row.classList.add('highlight');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
