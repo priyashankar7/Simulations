@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-bit Serial-In Serial-Out Shift Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #1c1c1c;
+            color: #fff;
+        }
+
+        .register {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .bit-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 5px;
+        }
+
+        .bit {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fff;
+            border-radius: 5px;
+            font-size: 24px;
+            background-color: #333;
+            margin-bottom: 5px;
+        }
+
+        .bit.active {
+            background-color: #00bcd4;
+        }
+
+        .label {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .arrow {
+            font-size: 24px;
+            margin: 0 10px;
+            display: inline-block;
+        }
+
+        .input-container {
+            margin: 10px 0;
+        }
+
+        .serial-input, .initial-input {
+            width: 100px;
+            height: 30px;
+            text-align: center;
+            font-size: 18px;
+            margin: 5px;
+        }
+
+        .controls {
+            margin: 10px;
+        }
+
+        table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #2c2c2c;
+        }
+
+        th, td {
+            border: 1px solid #fff;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #444;
+        }
+    </style>
+</head>
+<body>
+    <h1>4-bit Serial-In Serial-Out Shift Register</h1>
+    <div class="register">
+        <span class="arrow">Serial IN ➡</span>
+        <div class="bit-container">
+            <div class="label">Q<sub>0</sub></div>
+            <div class="bit" id="bit-0">0</div>
+        </div>
+        <div class="bit-container">
+            <div class="label">Q<sub>1</sub></div>
+            <div class="bit" id="bit-1">0</div>
+        </div>
+        <div class="bit-container">
+            <div class="label">Q<sub>2</sub></div>
+            <div class="bit" id="bit-2">0</div>
+        </div>
+        <div class="bit-container">
+            <div class="label">Q<sub>3</sub></div>
+            <div class="bit" id="bit-3">0</div>
+        </div>
+        <span class="arrow">➡ Serial OUT</span>
+    </div>
+    <div class="input-container">
+        <label for="initialInput">Initial Data (4 bits - Q<sub>0</sub>Q<sub>1</sub>Q<sub>2</sub>Q<sub>3</sub>): </label>
+        <input type="text" id="initialInput" class="initial-input" maxlength="4" placeholder="e.g., 1010">
+        <button onclick="setInitialData()">Feed</button>
+        <button onclick="resetRegister()">Reset</button>
+    </div>
+    <div class="input-container">
+        <label for="serialInput">Serial Data In: </label>
+        <input type="number" class="serial-input" id="serialInput" min="0" max="1" placeholder="0 or 1">
+        <button onclick="shiftRight()">Feed</button>
+    </div>
+
+    <h2>Interactive Truth Table</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Serial Data In</th>
+                <th>Clock</th>
+                <th>Q<sub>0</sub></th>
+                <th>Q<sub>1</sub></th>
+                <th>Q<sub>2</sub></th>
+                <th>Q<sub>3</sub></th>
+                <th>Serial Data Out</th>
+            </tr>
+        </thead>
+        <tbody id="truthTableBody">
+            <!-- Table rows will be generated dynamically -->
+        </tbody>
+    </table>
+
+    <script>
+        let register = [0, 0, 0, 0]; // Initial state of the shift register
+        let clockCycle = 0; // Track clock cycles
+
+        function updateDisplay() {
+            for (let i = 0; i < 4; i++) {
+                const bitElement = document.getElementById(`bit-${i}`);
+                bitElement.textContent = register[i];
+                if (register[i] === 1) {
+                    bitElement.classList.add('active');
+                } else {
+                    bitElement.classList.remove('active');
+                }
+            }
+        }
+
+        function setInitialData() {
+            const initialInput = document.getElementById('initialInput').value;
+            if (/^[01]{4}$/.test(initialInput)) {
+                register = initialInput.split('').map(Number); // Correctly map the input from left to right as Q0 to Q3
+                updateDisplay();
+                addTableRow('x', '-', true); // Add initial data row
+                clockCycle = 0; // Reset clock cycle for new initial data
+            } else {
+                alert('Please enter a valid 4-bit binary number (e.g., 1010)');
+            }
+        }
+
+        function shiftRight() {
+            const inputBit = parseInt(document.getElementById('serialInput').value);
+            if (inputBit === 0 || inputBit === 1) {
+                const serialOut = register.pop(); // Remove the rightmost bit (Q_3 as serial out)
+                register.unshift(inputBit); // Add the new input bit (serial in) to Q_0
+                clockCycle++;
+                updateDisplay();
+                addTableRow(inputBit, serialOut); // Add a new row for each shift
+                document.getElementById('serialInput').value = ''; // Clear input field
+            } else {
+                alert('Please enter 0 or 1 for serial input');
+            }
+        }
+
+        function resetRegister() {
+            register = [0, 0, 0, 0]; // Reset the register to 0000
+            clockCycle = 0; // Reset clock cycle
+            updateDisplay();
+            document.getElementById('initialInput').value = ''; // Clear initial data input field
+            document.getElementById('truthTableBody').innerHTML = ''; // Clear the truth table
+        }
+
+        function addTableRow(serialIn, serialOut, isInitial = false) {
+            const tableBody = document.getElementById('truthTableBody');
+            const row = document.createElement('tr');
+
+            if (isInitial) {
+                row.innerHTML = `
+                    <td>${serialIn}</td>
+                    <td>${serialOut}</td>
+                    <td>${register[0]}</td>
+                    <td>${register[1]}</td>
+                    <td>${register[2]}</td>
+                    <td>${register[3]}</td>
+                    <td>-</td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${serialIn}</td>
+                    <td>↑</td>
+                    <td>${register[0]}</td>
+                    <td>${register[1]}</td>
+                    <td>${register[2]}</td>
+                    <td>${register[3]}</td>
+                    <td>${serialOut}</td>
+                `;
+            }
+            tableBody.appendChild(row);
+        }
+
+        // Initial display
+        updateDisplay();
+    </script>
+</body>
+</html>
