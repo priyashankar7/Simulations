@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive AND Gate Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f8;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            font-size: 1.8rem;
+            margin: 10px 0;
+        }
+
+        .info {
+            margin-bottom: 20px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .info .description {
+            color: #3c78d8;
+        }
+
+        .info .interactive {
+            color: #f57c00;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: nowrap; /* No wrapping to ensure elements stay in one row */
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .inputs,
+        .output {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .switch button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #3c78d8;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .switch button.active {
+            background-color: #007bff;
+        }
+
+        .and-gate-image {
+            width: 150px;
+            height: auto;
+        }
+
+        .output {
+            align-items: center;
+        }
+
+        .output-light {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ccc;
+            box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .output-light.on {
+            background-color: yellow;
+            box-shadow: 0 0 20px 10px rgba(255, 255, 0, 0.5);
+        }
+
+        .truth-table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .truth-table th, .truth-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .truth-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+
+        .truth-table .highlight {
+            background-color: #6cbf84;
+            color: #fff;
+        }
+
+        .explanation {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #333;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: row;
+                flex-wrap: nowrap; /* Prevent wrapping */
+                gap: 10px; /* Smaller gap for mobile */
+            }
+
+            .inputs, .output {
+                flex-direction: column;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .and-gate-image {
+                max-width: 100px;
+            }
+
+            .switch button {
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .switch button {
+                font-size: 0.8rem;
+                padding: 6px 10px;
+            }
+
+            .and-gate-image {
+                max-width: 80px;
+            }
+
+            .output-light {
+                width: 25px;
+                height: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>From Inputs to Output: The AND Gate Adventure</h1>
+    <div class="info">
+        <p class="description">An AND gate produces a HIGH output (1) only when both inputs are HIGH (1).</p>
+        <p class="interactive">Play with A and B to discover how the LED reacts</p>
+    </div>
+
+    <div class="container">
+        <!-- Inputs -->
+        <div class="inputs">
+            <div class="switch">
+                <label>Input A</label>
+                <button id="buttonA">OFF</button>
+            </div>
+            <div class="switch">
+                <label>Input B</label>
+                <button id="buttonB">OFF</button>
+            </div>
+        </div>
+
+        <!-- AND Gate Image -->
+        <img src="https://edwisely-global-content.s3.ap-south-1.amazonaws.com/Concept_Summary_Cards/HtmlImages/image20241120062735.png" 
+             alt="AND Gate Symbol" class="and-gate-image">
+
+        <!-- Output -->
+        <div class="output">
+            <label>Output (Y):</label>
+            <div class="output-light" id="outputLight"></div>
+        </div>
+    </div>
+
+    <!-- Truth Table -->
+    <table class="truth-table">
+        <thead>
+            <tr>
+                <th>A</th>
+                <th>B</th>
+                <th>Y (Output)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr id="row-00">
+                <td>0</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr id="row-01">
+                <td>0</td>
+                <td>1</td>
+                <td>0</td>
+            </tr>
+            <tr id="row-10">
+                <td>1</td>
+                <td>0</td>
+                <td>0</td>
+            </tr>
+            <tr id="row-11">
+                <td>1</td>
+                <td>1</td>
+                <td>1</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="explanation" id="explanationText"></div>
+
+    <script>
+        const buttonA = document.getElementById('buttonA');
+        const buttonB = document.getElementById('buttonB');
+        const outputLight = document.getElementById('outputLight');
+        const currentA = document.getElementById('currentA');
+        const currentB = document.getElementById('currentB');
+        const truthTableRows = {
+            '00': document.getElementById('row-00'),
+            '01': document.getElementById('row-01'),
+            '10': document.getElementById('row-10'),
+            '11': document.getElementById('row-11'),
+        };
+
+        let inputA = 0;
+        let inputB = 0;
+
+        function updateInteractiveText(a, b) {
+            currentA.textContent = a;
+            currentB.textContent = b;
+        }
+
+        function updateOutput() {
+            const output = inputA & inputB;
+            if (output === 1) {
+                outputLight.classList.add('on');
+            } else {
+                outputLight.classList.remove('on');
+            }
+
+            Object.values(truthTableRows).forEach(row => row.classList.remove('highlight'));
+            truthTableRows[`${inputA}${inputB}`].classList.add('highlight');
+
+            const explanation = `When A = ${inputA} and B = ${inputB}, the output Y = ${inputA} ⋅ ${inputB} = ${output}`;
+            document.getElementById('explanationText').textContent = explanation;
+
+            updateInteractiveText(inputA, inputB);
+        }
+
+        buttonA.addEventListener('click', () => {
+            inputA = inputA === 0 ? 1 : 0;
+            buttonA.textContent = inputA === 1 ? 'ON' : 'OFF';
+            buttonA.classList.toggle('active', inputA === 1);
+            updateOutput();
+        });
+
+        buttonB.addEventListener('click', () => {
+            inputB = inputB === 0 ? 1 : 0;
+            buttonB.textContent = inputB === 1 ? 'ON' : 'OFF';
+            buttonB.classList.toggle('active', inputB === 1);
+            updateOutput();
+        });
+
+        updateOutput();
+    </script>
+
+</body>
+</html>
