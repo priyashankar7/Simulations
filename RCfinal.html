@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Sequential Logic with 4-Bit Ring Counter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .counter-panel {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #007bff;
+            font-size: 1.5rem;
+        }
+
+        .instructions {
+            color: #d9534f;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .bit-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .bit {
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            border-radius: 10px;
+            font-size: 1rem;
+            background-color: #fff;
+            position: relative;
+            flex: 1 1 60px;
+            max-width: 80px;
+        }
+
+        .bit.active {
+            background-color: #4caf50;
+            color: #fff;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        .bit-label {
+            position: absolute;
+            top: -20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .calculation {
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+
+        .truth-table {
+            margin-top: 20px;
+            border: 2px solid #000;
+            padding: 10px;
+            background-color: #fff;
+            overflow-x: auto;
+        }
+
+        .truth-table table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .truth-table th, .truth-table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .truth-table th {
+            background-color: #ddd;
+        }
+
+        .highlight {
+            background-color: #ffff99;
+        }
+
+        canvas {
+            margin-top: 30px;
+            border: 1px solid #000;
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Responsive design using media queries */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .instructions {
+                font-size: 0.9rem;
+            }
+
+            .bit {
+                font-size: 0.8rem;
+                max-width: 60px;
+            }
+
+            .bit-label {
+                font-size: 0.7rem;
+            }
+
+            button {
+                font-size: 0.9rem;
+            }
+
+            .calculation {
+                font-size: 0.9rem;
+            }
+
+            .truth-table table {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1rem;
+            }
+
+            .instructions {
+                font-size: 0.8rem;
+            }
+
+            .bit {
+                width: 50px;
+                height: 50px;
+                font-size: 0.7rem;
+            }
+
+            .bit-label {
+                font-size: 0.6rem;
+            }
+
+            button {
+                padding: 8px 15px;
+                font-size: 0.8rem;
+            }
+
+            .truth-table table {
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="counter-panel">
+            <h1>Master Sequential Logic with 4-Bit Ring Counter</h1>
+            <p>This simulation demonstrates a 4-bit ring counter, where one bit is shifted around a circular register in response to clock pulses.</p>
+            <p class="instructions">Step through the 4-bit ring counter by clicking "Next Clock Pulse". Use "Reset" for a fresh start!</p>
+            <div class="bit-container">
+                <div class="bit" id="bit-3"><span class="bit-label">Q<sub>3</sub></span>0</div>
+                <div class="bit" id="bit-2"><span class="bit-label">Q<sub>2</sub></span>0</div>
+                <div class="bit" id="bit-1"><span class="bit-label">Q<sub>1</sub></span>0</div>
+                <div class="bit" id="bit-0"><span class="bit-label">Q<sub>0</sub></span>1</div>
+            </div>
+            <button onclick="nextClockPulse()">Next Clock Pulse</button>
+            <button onclick="resetCounter()">Reset</button>
+            <div class="calculation" id="calculation">Initial State: 0001</div>
+            <canvas id="waveformCanvas" width="1000" height="350"></canvas>
+        </div>
+
+        <div class="truth-table">
+            <h2>4-bit Truth Table with Clock Signal</h2>
+            <table id="truthTable">
+                <thead>
+                    <tr>
+                        <th>Clock Pulse</th>
+                        <th>Output (Q<sub>3</sub> Q<sub>2</sub> Q<sub>1</sub> Q<sub>0</sub>)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr id="row-1"><td>1</td><td>0001</td></tr>
+                    <tr id="row-2"><td>2</td><td>0010</td></tr>
+                    <tr id="row-3"><td>3</td><td>0100</td></tr>
+                    <tr id="row-4"><td>4</td><td>1000</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        // JavaScript code remains unchanged
+        let bits = [1, 0, 0, 0];
+        const bitElements = [
+            document.getElementById('bit-0'),
+            document.getElementById('bit-1'),
+            document.getElementById('bit-2'),
+            document.getElementById('bit-3')
+        ];
+        let clockPulse = 1;
+        let history = [{ clockPulse: 1, bits: [1, 0, 0, 0] }];
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const colors = {
+            clock: '#ff0000',
+            Q0: '#ffa500',
+            Q1: '#ff00ff',
+            Q2: '#00ff00',
+            Q3: '#0000ff'
+        };
+
+        function updateDisplay() {
+            bitElements.forEach((bit, index) => {
+                bit.textContent = bits[index];
+                if (bits[index] === 1) {
+                    bit.classList.add('active');
+                } else {
+                    bit.classList.remove('active');
+                }
+            });
+            highlightTruthTable();
+            drawWaveforms();
+        }
+
+        function highlightTruthTable() {
+            for (let i = 1; i <= 4; i++) {
+                document.getElementById(`row-${i}`).classList.remove('highlight');
+            }
+            const rowIndex = ((clockPulse - 1) % 4) + 1;
+            document.getElementById(`row-${rowIndex}`).classList.add('highlight');
+        }
+
+        function nextClockPulse() {
+            if (clockPulse >= 8) {
+                resetCounter();
+                return;
+            }
+            bits = [bits[3], bits[0], bits[1], bits[2]];
+            clockPulse++;
+            updateDisplay();
+            document.getElementById('calculation').textContent =
+                `Clock Pulse ${clockPulse}: ${bits.join('')}`;
+            history.push({ clockPulse, bits: [...bits] });
+            if (history.length > 8) {
+                history.shift();
+            }
+            drawWaveforms();
+        }
+
+        function resetCounter() {
+            bits = [1, 0, 0, 0];
+            clockPulse = 1;
+            history = [{ clockPulse: 1, bits: [1, 0, 0, 0] }];
+            updateDisplay();
+            document.getElementById('calculation').textContent = 'Initial State: 0001';
+            drawWaveforms();
+        }
+
+        function drawWaveforms() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const signalHeight = 20;
+            const baseYClock = 30;
+            const baseYOutputs = [80, 140, 200, 260];
+            const stepWidth = 50;
+
+            function drawSquareWave(baseY, signal, color) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(30, baseY + signalHeight);
+                let x = 30;
+                for (let i = 0; i < signal.length && i < 8 * 2; i++) {
+                    const level = signal[i] ? -signalHeight : signalHeight;
+                    ctx.lineTo(x, baseY + level);
+                    x += stepWidth;
+                    ctx.lineTo(x, baseY + level);
+                }
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = colors.clock;
+            ctx.font = '16px Arial';
+            ctx.fillText("Clock", 5, baseYClock - 20);
+            const clockSignal = [];
+            for (let i = 0; i < history.length * 2 && i < 8 * 2; i++) {
+                clockSignal.push(i % 2 === 0 ? 1 : 0);
+            }
+            drawSquareWave(baseYClock, clockSignal, colors.clock);
+
+            const outputsOrder = ['Q0', 'Q1', 'Q2', 'Q3'];
+            for (let i = 0; i < outputsOrder.length; i++) {
+                const outputSignal = [];
+                for (let pulse = 0; pulse < history.length * 2 && pulse < 8 * 2; pulse++) {
+                    if (Math.floor(pulse / 2) % 4 === i && clockSignal[pulse] === 1) {
+                        outputSignal.push(1);
+                    } else {
+                        outputSignal.push(0);
+                    }
+                }
+                const color = colors[outputsOrder[i]];
+                ctx.fillStyle = color;
+                ctx.fillText(outputsOrder[i], 5, baseYOutputs[i] - 20);
+                drawSquareWave(baseYOutputs[i], outputSignal, color);
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
