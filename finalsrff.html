@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualize the NAND-Driven SR Flip-Flop Circuit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #F2F2F2;
+            margin: 20px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #4CAF50;
+        }
+        .highlight-text {
+            font-size: 18px;
+            color: #FF5722;
+        }
+        .schematic {
+            position: relative;
+            width: 280px;
+            margin: 20px auto;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            background-color: #fff;
+            padding: 10px;
+        }
+        .schematic img {
+            width: 200px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        .switch-container {
+            position: absolute;
+            top: 7%;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 100px;
+        }
+        .output-container {
+            position: absolute;
+            top: 10%;
+            right: 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+        }
+        .switch {
+            display: inline-block;
+            position: relative;
+            width: 40px;
+            height: 20px;
+        }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #4CAF50;
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        .led {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #000;
+        }
+        .led.off {
+            background-color: transparent;
+        }
+        .led.on {
+            background-color: yellow;
+        }
+        .led.invalid {
+            background-color: red;
+        }
+        .truth-table {
+            margin: 20px auto;
+            width: 90%;
+            max-width: 600px;
+            border-collapse: collapse;
+        }
+        .truth-table th, .truth-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        .truth-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .highlight {
+            background-color: #FFEB3B;
+        }
+        #invalidCondition {
+            color: red;
+            font-weight: bold;
+            display: none;
+        }
+        @media (max-width: 480px) {
+            .truth-table {
+                width: 100%; /* Make the table take the full width of smaller screens */
+            }
+            .truth-table th, .truth-table td {
+                padding: 5px; /* Reduce padding for smaller screens */
+                font-size: 12px; /* Adjust font size for readability */
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Visualize the NAND-Driven SR Flip-Flop Circuit</h1>
+    <p>The NAND-based SR Flip-Flop toggles outputs based on the Set (S) and Reset (R) inputs. When both inputs are 0, it stores the current state (Q). When S=1 and R=0, Q becomes 1, and for S=0 and R=1, Q becomes 0. The state is invalid when both S and R are 1.</p>
+    <p class="highlight-text"><strong>Now let's experiment with S, R, and Q – Watch the LEDs Reveal the Flip-Flop's Next State!</strong></p>
+    <div>
+        <label>Set the current state (Q):
+            <label class="switch">
+                <input type="checkbox" id="currentQ" onchange="updateState()">
+                <span class="slider"></span>
+            </label>
+            (<span id="currentQState">logic 0</span>)
+        </label>
+    </div>
+    <div class="schematic">
+        <div class="switch-container">
+            <label>S:
+                <label class="switch">
+                    <input type="checkbox" id="inputS" onchange="updateState()">
+                    <span class="slider"></span>
+                </label>
+            </label>
+            <label>R:
+                <label class="switch">
+                    <input type="checkbox" id="inputR" onchange="updateState()">
+                    <span class="slider"></span>
+                </label>
+            </label>
+        </div>
+        <img src="https://edwisely-global-content.s3.ap-south-1.amazonaws.com/Concept_Summary_Cards/HtmlImages/image20241120092202.png" alt="SR Flip-Flop">
+        <div class="output-container">
+            <span class="led off" id="ledQ"></span>
+            <span class="led off" id="ledQBar"></span>
+        </div>
+    </div>
+    <div id="invalidCondition">Invalid state: Both S and R cannot be 1!</div>
+    <table class="truth-table">
+        <thead>
+            <tr>
+                <th>S (Input)</th>
+                <th>R (Input)</th>
+                <th>Q (Current State)</th>
+                <th>Q<sub>n+1</sub> (Next State)</th>
+                <th>&#x0305;Q<sub>n+1</sub> (Complement of Next State)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+            <tr><td>0</td><td>0</td><td>1</td><td>1</td><td>0</td></tr>
+            <tr><td>0</td><td>1</td><td>X</td><td>0</td><td>1</td></tr>
+            <tr><td>1</td><td>0</td><td>X</td><td>1</td><td>0</td></tr>
+            <tr><td>1</td><td>1</td><td>X</td><td colspan="2">Invalid</td></tr>
+        </tbody>
+    </table>
+    <script>
+        let Q = 0;
+        window.onload = function () {
+            document.getElementById('inputS').checked = false;
+            document.getElementById('inputR').checked = false;
+            document.getElementById('currentQ').checked = false;
+            updateState();
+        };
+        function updateState() {
+            const S = document.getElementById('inputS').checked ? 1 : 0;
+            const R = document.getElementById('inputR').checked ? 1 : 0;
+            Q = document.getElementById('currentQ').checked ? 1 : 0;
+            const ledQ = document.getElementById('ledQ');
+            const ledQBar = document.getElementById('ledQBar');
+            const invalid = document.getElementById('invalidCondition');
+            const currentQStateText = document.getElementById('currentQState');
+            currentQStateText.textContent = Q === 1 ? 'logic 1' : 'logic 0';
+            if (S === 1 && R === 1) {
+                ledQ.className = 'led invalid';
+                ledQBar.className = 'led invalid';
+                invalid.style.display = 'block';
+                highlightTruthTable(S, R, null);
+                return;
+            }
+            invalid.style.display = 'none';
+            let QNext;
+            if (S === 1 && R === 0) QNext = 1;
+            if (S === 0 && R === 1) QNext = 0;
+            if (S === 0 && R === 0) QNext = Q;
+            ledQ.className = QNext === 1 ? 'led on' : 'led off';
+            ledQBar.className = QNext === 1 ? 'led off' : 'led on';
+            highlightTruthTable(S, R, QNext);
+        }
+        function highlightTruthTable(S, R, QNext) {
+            const rows = document.querySelectorAll('.truth-table tbody tr');
+            rows.forEach(row => row.classList.remove('highlight'));
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if (cells[0].innerText == S && cells[1].innerText == R) {
+                    if (cells[2].innerText === 'X' || parseInt(cells[3].innerText) === QNext) {
+                        row.classList.add('highlight');
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
