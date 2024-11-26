@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-bit Johnson Counter Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background-color: #f4f4f9;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        .counter-panel {
+            text-align: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .bit-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .bit {
+            width: 15%;
+            max-width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #000;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            background-color: #fff;
+            position: relative;
+        }
+
+        .bit.active {
+            background-color: #4caf50;
+            color: #fff;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        .bit-label {
+            position: absolute;
+            top: -25px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .calculation {
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+            margin-top: 30px;
+            border: 1px solid #000;
+        }
+
+        .truth-table {
+            margin-top: 20px;
+            border: 2px solid #000;
+            padding: 10px;
+            background-color: #fff;
+            text-align: center;
+            width: 100%;
+            max-width: 900px;
+            overflow-x: auto;
+        }
+
+        .truth-table table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+        }
+
+        .truth-table th, .truth-table td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+
+        .truth-table th {
+            background-color: #ddd;
+        }
+
+        .highlight {
+            background-color: #ffff99;
+        }
+
+        .explanation {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #555;
+        }
+
+        .engage-message {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #d2691e;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .bit {
+                width: 18%;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .bit-label {
+                font-size: 0.9rem;
+            }
+
+            button {
+                font-size: 0.9rem;
+                padding: 8px 15px;
+            }
+
+            .calculation {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .bit {
+                width: 22%;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .bit-label {
+                font-size: 0.8rem;
+            }
+
+            button {
+                font-size: 0.8rem;
+                padding: 6px 12px;
+            }
+
+            .calculation {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="counter-panel">
+        <h1 style="color: #1e90ff;">Click, Count, Learn: The 4-Bit Johnson Counter Adventure!</h1>
+        <div class="explanation">
+            A Johnson counter shifts the inverted output of the last flip-flop back to the first, creating a sequence of states.
+        </div>
+        <div class="engage-message">
+            Engage and learn: Try 'Next Clock Pulse' for steps, and 'Reset' to start anew! 🚀
+        </div>
+        <div class="bit-container">
+            <div class="bit" id="bit-0"><span class="bit-label">Q<sub>1</sub></span>0</div>
+            <div class="bit" id="bit-1"><span class="bit-label">Q<sub>2</sub></span>0</div>
+            <div class="bit" id="bit-2"><span class="bit-label">Q<sub>3</sub></span>0</div>
+            <div class="bit" id="bit-3"><span class="bit-label">Q<sub>4</sub></span>0</div>
+        </div>
+        <button onclick="nextClockPulse()">Next Clock Pulse</button>
+        <button onclick="resetCounter()">Reset</button>
+        <div class="calculation" id="calculation">Initial State: 0000</div>
+        <canvas id="waveformCanvas" width="1000" height="350"></canvas>
+    </div>
+
+    <div class="truth-table">
+        <h2>4-bit Johnson Counter Truth Table</h2>
+        <table id="truthTable">
+            <thead>
+                <tr>
+                    <th>CP</th>
+                    <th>Q<sub>1</sub></th>
+                    <th>Q<sub>2</sub></th>
+                    <th>Q<sub>3</sub></th>
+                    <th>Q<sub>4</sub></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr id="row-0"><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr id="row-1"><td>1</td><td>1</td><td>0</td><td>0</td><td>0</td></tr>
+                <tr id="row-2"><td>2</td><td>1</td><td>1</td><td>0</td><td>0</td></tr>
+                <tr id="row-3"><td>3</td><td>1</td><td>1</td><td>1</td><td>0</td></tr>
+                <tr id="row-4"><td>4</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+                <tr id="row-5"><td>5</td><td>0</td><td>1</td><td>1</td><td>1</td></tr>
+                <tr id="row-6"><td>6</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+                <tr id="row-7"><td>7</td><td>0</td><td>0</td><td>0</td><td>1</td></tr>
+                <tr id="row-8"><td>8</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let bits = [0, 0, 0, 0];
+        const bitElements = [
+            document.getElementById('bit-0'),
+            document.getElementById('bit-1'),
+            document.getElementById('bit-2'),
+            document.getElementById('bit-3')
+        ];
+        let clockPulse = 0;
+        const states = [
+            [0, 0, 0, 0],
+            [1, 0, 0, 0],
+            [1, 1, 0, 0],
+            [1, 1, 1, 0],
+            [1, 1, 1, 1],
+            [0, 1, 1, 1],
+            [0, 0, 1, 1],
+            [0, 0, 0, 1],
+            [0, 0, 0, 0]
+        ];
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function updateDisplay() {
+            bits = states[clockPulse % states.length];
+            bitElements.forEach((bit, index) => {
+                bit.textContent = bits[index];
+                if (bits[index] === 1) {
+                    bit.classList.add('active');
+                } else {
+                    bit.classList.remove('active');
+                }
+            });
+            highlightTruthTable();
+            drawWaveforms();
+        }
+
+        function highlightTruthTable() {
+            for (let i = 0; i <= 8; i++) {
+                document.getElementById(`row-${i}`).classList.remove('highlight');
+            }
+            document.getElementById(`row-${clockPulse % states.length}`).classList.add('highlight');
+        }
+
+        function nextClockPulse() {
+            clockPulse++;
+            if (clockPulse > 8) {
+                resetCounter();
+            } else {
+                updateDisplay();
+                document.getElementById('calculation').textContent = 
+                    `Clock Pulse ${clockPulse}: ${bits.join('')}`;
+            }
+        }
+
+        function resetCounter() {
+            clockPulse = 0;
+            updateDisplay();
+            document.getElementById('calculation').textContent = 'Initial State: 0000';
+        }
+
+        function drawWaveforms() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const signalHeight = 20;
+            const baseYClock = 30;
+            const baseYOutputs = [80, 140, 200, 260];
+            const stepWidth = 50;
+
+            function drawSquareWave(baseY, signal, color) {
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(30, baseY + signalHeight);
+                let x = 30;
+                for (let i = 0; i < signal.length; i++) {
+                    const level = signal[i] ? -signalHeight : signalHeight;
+                    ctx.lineTo(x, baseY + level);
+                    x += stepWidth;
+                    ctx.lineTo(x, baseY + level);
+                }
+                ctx.stroke();
+            }
+
+            const colors = {
+                clock: '#ff0000',
+                Q1: '#ffa500',
+                Q2: '#ff00ff',
+                Q3: '#00ff00',
+                Q4: '#0000ff'
+            };
+            ctx.fillStyle = colors.clock;
+            ctx.font = '16px Arial';
+            ctx.fillText("Clock", 5, baseYClock - 20);
+            const clockSignal = [];
+            for (let i = 0; i <= clockPulse * 2; i++) {
+                clockSignal.push(i % 2 === 0 ? 1 : 0);
+            }
+            drawSquareWave(baseYClock, clockSignal, colors.clock);
+
+            const outputsOrder = ['Q1', 'Q2', 'Q3', 'Q4'];
+            for (let i = 0; i < outputsOrder.length; i++) {
+                const outputSignal = [];
+                for (let pulse = 0; pulse <= clockPulse * 2; pulse++) {
+                    outputSignal.push(states[Math.floor(pulse / 2) % states.length][i]);
+                }
+
+                const color = colors[outputsOrder[i]];
+                ctx.fillStyle = color;
+                ctx.fillText(outputsOrder[i], 5, baseYOutputs[i] - 20);
+                drawSquareWave(baseYOutputs[i], outputSignal, color);
+            }
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
